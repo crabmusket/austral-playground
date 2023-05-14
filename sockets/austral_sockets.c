@@ -93,6 +93,11 @@ int austral_sockets_bind(int family, int socktype, const char* addr, const char 
   return sockfd;
 }
 
+int austral_sockets_accept(int sockfd)
+{
+  return accept(sockfd, NULL, NULL);
+}
+
 int austral_sockets_listen(int sockfd, int backlog)
 {
   return listen(sockfd, backlog);
@@ -101,4 +106,23 @@ int austral_sockets_listen(int sockfd, int backlog)
 int austral_sockets_close(int sockfd)
 {
   return close(sockfd);
+}
+
+int austral_sockets_send_all(int sockfd, const char *buf)
+{
+  int len = strlen(buf);
+  int total = 0; // how many bytes we've sent
+  int bytesleft = len; // how many we have left to send
+  int n;
+
+  while(total < len) {
+    n = send(sockfd, buf+total, bytesleft, 0);
+    if (n == -1) {
+      break;
+    }
+    total += n;
+    bytesleft -= n;
+  }
+
+  return n == -1 ? -1 : total; // return -1 on failure, bytes sent on success
 }

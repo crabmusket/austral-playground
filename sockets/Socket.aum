@@ -15,6 +15,10 @@ module body Socket is
     fd: Int32;
   end;
 
+  record ConnectedSocket: Linear is
+    fd: Int32;
+  end;
+
   generic [R: Region, S: Region]
   function createBoundSocket(root: &[RootCapability, R], opts: &[BindOptions, S]): Option[BoundSocket] is
     let host: FixedArray[Nat8] := getHost(opts->address);
@@ -43,6 +47,29 @@ module body Socket is
     return nil;
   end;
 
+  -- Blocking accept next connection.
+  generic [R: Region]
+  function accept(socket: &[ListeningSocket, R]): Option[ConnectedSocket] is
+    let newFd: Int32 := C_austral_sockets_accept(socket->fd);
+    if newFd < 0 then
+      return None();
+    else
+      return Some(value => ConnectedSocket(fd => newFd));
+    end if;
+  end;
+
+  generic [R: Region]
+  function send(socket: &[ConnectedSocket, R], data: FixedArray[Nat8]): Unit is
+    C_austral_sockets_send_all(socket->fd, data);
+    return nil;
+  end;
+
+  function endConnection(socket: ConnectedSocket): Unit is
+    let {fd: Int32} := socket;
+    C_austral_sockets_close(fd);
+    return nil;
+  end;
+
   function C_austral_sockets_bind(family: Int32, socktype: Int32, addr: FixedArray[Nat8], port: FixedArray[Nat8]): Int32 is
     pragma Foreign_Import(External_Name => "austral_sockets_bind");
   end;
@@ -53,6 +80,14 @@ module body Socket is
 
   function C_austral_sockets_close(fd: Int32): Int32 is
     pragma Foreign_Import(External_Name => "austral_sockets_close");
+  end;
+
+  function C_austral_sockets_accept(fd: Int32): Int32 is
+    pragma Foreign_Import(External_Name => "austral_sockets_accept");
+  end;
+
+  function C_austral_sockets_send_all(fd: Int32, data: FixedArray[Nat8]): Int32 is
+    pragma Foreign_Import(External_Name => "austral_sockets_send_all");
   end;
 
   function getHost(address: BindAddress): FixedArray[Nat8] is

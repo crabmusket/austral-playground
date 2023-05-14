@@ -1,10 +1,14 @@
 import Socket (
   BoundSocket,
   ListeningSocket,
+  ConnectedSocket,
   createBoundSocket,
   closeListeningSocket,
   Stream,
   listen,
+  accept,
+  send,
+  endConnection,
   Wildcard,
   BindOptions
 );
@@ -24,6 +28,24 @@ module body EchoServer is
   generic [R: Region]
   function acceptLoop(socket: &[ListeningSocket, R]): Unit is
     printLn("listening...");
+    while true do
+      let maybeClient: Option[ConnectedSocket] := accept(socket);
+      case maybeClient of
+        when None do
+          return nil;
+        when Some(value: ConnectedSocket) do
+          printLn("new client!");
+          handleClient(value);
+          return nil;
+      end case;
+    end while;
+    return nil;
+  end;
+
+  function handleClient(client: ConnectedSocket): Unit is
+    printLn("saying goodbye to client");
+    send(&client, "goodbye!\n");
+    endConnection(client);
     return nil;
   end;
 

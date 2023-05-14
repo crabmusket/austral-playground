@@ -1,6 +1,7 @@
 module Socket is
   type BoundSocket: Linear;
   type ListeningSocket: Linear;
+  type ConnectedSocket: Linear;
 
   union SocketType: Free is
     case Stream; -- i.e. TCP
@@ -30,4 +31,12 @@ module Socket is
   function listen(socket: BoundSocket): Option[ListeningSocket];
 
   function closeListeningSocket(socket: ListeningSocket): Unit;
+
+  generic [R: Region]
+  function accept(socket: &[ListeningSocket, R]): Option[ConnectedSocket];
+
+  function endConnection(socket: ConnectedSocket): Unit;
+
+  generic [R: Region]
+  function send(socket: &[ConnectedSocket, R], data: FixedArray[Nat8]): Unit;
 end module.
