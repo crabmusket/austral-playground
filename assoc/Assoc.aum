@@ -1,0 +1,43 @@
+import Standard.Buffer (
+  Buffer,
+  allocateEmpty,
+  destroyFree,
+  insertBack
+);
+
+module body Assoc is
+  function main(): ExitCode is
+    let a: Assoc := makeEmpty();
+    insert(&!a, 1, 2);
+    destroy(a);
+    return ExitSuccess();
+  end;
+
+  record Assoc: Linear is
+    keys: Buffer[Int32];
+    values: Buffer[Int32];
+  end;
+
+  function makeEmpty(): Assoc is
+    let keys: Buffer[Int32] := allocateEmpty();
+    let values: Buffer[Int32] := allocateEmpty();
+    return Assoc(keys => keys, values => values);
+  end;
+
+  generic [R: Region]
+  function insert(assoc: &![Assoc, R], key: Int32, value: Int32): Unit is
+    insertBack(&!(assoc->keys), key);
+    insertBack(&!(assoc->values), value);
+    return nil;
+  end;
+
+  function destroy(assoc: Assoc): Unit is
+    let {
+      keys: Buffer[Int32],
+      values: Buffer[Int32]
+    } := assoc;
+    destroyFree(keys);
+    destroyFree(values);
+    return nil;
+  end;
+end module body.

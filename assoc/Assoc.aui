@@ -1,0 +1,10 @@
+module Assoc is
+  type Assoc: Linear;
+
+  function makeEmpty(): Assoc;
+
+  generic [R: Region]
+  function insert(assoc: &![Assoc, R], key: Int32, value: Int32): Unit;
+
+  function destroy(assoc: Assoc): Unit;
+end module.
