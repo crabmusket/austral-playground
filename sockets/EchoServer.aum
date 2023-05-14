@@ -1,0 +1,58 @@
+import Socket (
+  BoundSocket,
+  ListeningSocket,
+  createBoundSocket,
+  closeListeningSocket,
+  Stream,
+  listen,
+  Wildcard,
+  BindOptions
+);
+
+module body EchoServer is
+  function main(root: RootCapability): ExitCode is
+    let bound: BoundSocket := mustBind(&root);
+    let listening: ListeningSocket := mustListen(bound);
+    acceptLoop(&listening);
+    closeListeningSocket(listening);
+    printLn("closed");
+
+    surrenderRoot(root);
+    return ExitSuccess();
+  end;
+
+  generic [R: Region]
+  function acceptLoop(socket: &[ListeningSocket, R]): Unit is
+    printLn("listening...");
+    return nil;
+  end;
+
+  generic [R: Region]
+  function mustBind(root: &[RootCapability, R]): BoundSocket is
+    let opts: BindOptions := BindOptions(
+      socket_type => Stream(),
+      address => Wildcard(),
+      port => "4950"
+    );
+    let maybeBound: Option[BoundSocket] := createBoundSocket(root, &opts);
+
+    case maybeBound of
+      when None do
+        abort("Abort! Failed to bind");
+
+      when Some(value: BoundSocket) do
+        return value;
+    end case;
+  end;
+
+  function mustListen(bound: BoundSocket): ListeningSocket is
+    let maybeListening: Option[ListeningSocket] := listen(bound);
+    case maybeListening of
+      when None do
+        abort("Abort! Failed to listen");
+
+      when Some(value: ListeningSocket) do
+        return value;
+    end case;
+  end;
+end module body.

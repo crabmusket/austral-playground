@@ -1,0 +1,103 @@
+import Austral.Memory (Address);
+
+module body Socket is
+  pragma Unsafe_Module;
+
+  record Socket: Linear is
+    fd: Int32;
+  end;
+
+  record BoundSocket: Linear is
+    fd: Int32;
+  end;
+
+  record ListeningSocket: Linear is
+    fd: Int32;
+  end;
+
+  generic [R: Region, S: Region]
+  function createBoundSocket(root: &[RootCapability, R], opts: &[BindOptions, S]): Option[BoundSocket] is
+    let host: FixedArray[Nat8] := getHost(opts->address);
+    let fam: Int32 := getFamily(opts->address);
+    let typ: Int32 := getType(opts->socket_type);
+    let fd: Int32 := C_austral_sockets_bind(fam, typ, host, opts->port);
+    if fd < 0 then
+      return None();
+    else
+      return Some(value => BoundSocket(fd => fd));
+    end if;
+  end;
+
+  function listen(socket: BoundSocket): Option[ListeningSocket] is
+    let {fd: Int32} := socket;
+    if C_austral_sockets_listen(fd, 100) = -1 then
+      return None();
+    else
+      return Some(value => ListeningSocket(fd => fd));
+    end if;
+  end;
+
+  function closeListeningSocket(socket: ListeningSocket): Unit is
+    let {fd: Int32} := socket;
+    C_austral_sockets_close(fd);
+    return nil;
+  end;
+
+  function C_austral_sockets_bind(family: Int32, socktype: Int32, addr: FixedArray[Nat8], port: FixedArray[Nat8]): Int32 is
+    pragma Foreign_Import(External_Name => "austral_sockets_bind");
+  end;
+
+  function C_austral_sockets_listen(fd: Int32, backlog: Int32): Int32 is
+    pragma Foreign_Import(External_Name => "austral_sockets_listen");
+  end;
+
+  function C_austral_sockets_close(fd: Int32): Int32 is
+    pragma Foreign_Import(External_Name => "austral_sockets_close");
+  end;
+
+  function getHost(address: BindAddress): FixedArray[Nat8] is
+    case address of
+      -- In order to not work out how to pass null pointers to C FFI, we'll use empty strings
+      -- to represent the wildcard values, and interpret that in the C code.
+      when Wildcard do
+        return "";
+      when IPv4(addr: FixedArray[Nat8]) do
+        return addr;
+      when IPv6(addr: FixedArray[Nat8]) do
+        return addr;
+    end case;
+  end;
+
+  function getFamily(address: BindAddress): Int32 is
+    case address of
+      when Wildcard do
+        return AF_UNSPEC;
+      when IPv4(addr: FixedArray[Nat8]) do
+        return AF_INET;
+      when IPv6(addr: FixedArray[Nat8]) do
+        return AF_INET6;
+    end case;
+  end;
+
+  function getType(t: SocketType): Int32 is
+    case t of
+      when Stream do
+        return SOCK_STREAM;
+      when Datagram do
+        return SOCK_DGRAM;
+    end case;
+  end;
+
+  -- I'm sure these constants are platform dependent, but I only care about Linux for now.
+  -- To find these values on Linux:
+  -- rg AF_INET /usr/include
+
+  constant AF_UNSPEC: Int32 := 0;
+  constant AF_UNIX: Int32 := 1;
+  constant AF_LOCAL: Int32 := 1; -- synonym of _UNIX
+  constant AF_INET: Int32 := 2;
+  constant AF_INET6: Int32 := 10;
+  constant SOCK_STREAM: Int32 := 1;
+  constant SOCK_DGRAM: Int32 := 2;
+  constant INADDR_ANY: Int32 := 0;
+end module body.

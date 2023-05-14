@@ -1,0 +1,33 @@
+module Socket is
+  type BoundSocket: Linear;
+  type ListeningSocket: Linear;
+
+  union SocketType: Free is
+    case Stream; -- i.e. TCP
+    case Datagram; -- i.e. UDP
+  end;
+
+  union BindAddress: Free is
+    -- Bind to "any interface" so the IP address doesn't matter.
+    case Wildcard;
+    -- Bind to a specific IPv4 address.
+    case IPv4 is
+      addr: FixedArray[Nat8];
+    -- Bind to a specific IPv6 address.
+    case IPv6 is
+      addr: FixedArray[Nat8];
+  end;
+
+  record BindOptions: Free is
+    socket_type: SocketType;
+    address: BindAddress;
+    port: FixedArray[Nat8];
+  end;
+
+  generic [R: Region, S: Region]
+  function createBoundSocket(root: &[RootCapability, R], opts: &[BindOptions, S]): Option[BoundSocket];
+
+  function listen(socket: BoundSocket): Option[ListeningSocket];
+
+  function closeListeningSocket(socket: ListeningSocket): Unit;
+end module.

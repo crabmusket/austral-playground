@@ -1,0 +1,14 @@
+SOURCES := "./Socket.aui,./Socket.aum ./EchoServer.aum"
+
+run: build
+  ./bin/echo-server
+
+debug: build
+  gdb ./bin/echo-server
+
+build: build-c
+  gcc bin/echo-server.c ./austral_sockets.c -g -o bin/echo-server
+
+build-c:
+  mkdir -p bin
+  austral compile --entrypoint=EchoServer:main --target-type=c --output=bin/echo-server.c {{SOURCES}}
