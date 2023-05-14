@@ -3,7 +3,7 @@ set dotenv-load
 SOURCES := "./Assoc.aui,./Assoc.aum ./Example.aum"
 
 STDLIB := env_var('AUSTRAL_STD')
-STANDARD_SOURCES := STDLIB + '/Buffer.aui' + ',' + STDLIB + '/Buffer.aum'
+STANDARD_SOURCES := replace("__/Buffer.aui,__/Buffer.aum", '__', STDLIB)
 
 run: build
   ./bin/assoc
