@@ -22,7 +22,9 @@ module body Assoc is
   generic [R: Region]
   function insert(assoc: &![Assoc, R], key: Int32, value: Int32): Unit is
     insertBack(&(assoc->keys), key);
-    -- error :'(
+    -- Linearity Error
+    -- The variable `assoc` has already been consumed.
+    -- :(
     -- insertBack(&(assoc->values), value);
     return nil;
   end;
