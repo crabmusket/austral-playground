@@ -1,10 +1,32 @@
 module Assoc is
+  """
+  Associative arrays, where each entry has a key and a value.
+  The keys and values are stored in separate arrays which are kept in sync.
+  """
   type Assoc: Linear;
 
+  """
+  Make an empty associative array pair.
+  """
   function makeEmpty(): Assoc;
 
+  """
+  Insert a key/value pair into the association.
+  """
+  function with(assoc: Assoc, key: Int32, value: Int32): Assoc;
+
+  """
+  Insert a key/value pair into the associative list in a mutable way.
+  NOT WORKING.
+  """
   generic [R: Region]
   function insert(assoc: &![Assoc, R], key: Int32, value: Int32): Unit;
 
-  function destroy(assoc: Assoc): Unit;
+  """
+  Deallocate the array storage.
+  """
+  function unmake(assoc: Assoc): Unit;
+
+  generic [R: Region]
+  function display(assoc: &[Assoc, R]): Unit;
 end module.

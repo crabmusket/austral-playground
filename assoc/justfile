@@ -1,6 +1,6 @@
 set dotenv-load
 
-SOURCES := "./Assoc.aui,./Assoc.aum"
+SOURCES := "./Assoc.aui,./Assoc.aum ./Example.aum"
 
 STDLIB := env_var('AUSTRAL_STD')
 STANDARD_SOURCES := STDLIB + '/Buffer.aui' + ',' + STDLIB + '/Buffer.aum'
@@ -12,4 +12,5 @@ debug: build
   gdb ./bin/assoc
 
 build:
-  austral compile --entrypoint=Assoc:main --output=bin/assoc {{STANDARD_SOURCES}} {{SOURCES}}
+  mkdir -p bin
+  austral compile --entrypoint=Example:main --output=bin/assoc {{STANDARD_SOURCES}} {{SOURCES}}

@@ -1,0 +1,12 @@
+import Assoc (Assoc, makeEmpty, insert, with, unmake, display);
+
+module body Example is
+  function main(): ExitCode is
+    var a: Assoc := makeEmpty();
+    var b: Assoc := with(a, 1, 2);
+    var c: Assoc := with(b, 8, -4);
+    display(&c);
+    unmake(c);
+    return ExitSuccess();
+  end;
+end module body.

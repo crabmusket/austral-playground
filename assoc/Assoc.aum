@@ -2,17 +2,12 @@ import Standard.Buffer (
   Buffer,
   allocateEmpty,
   destroyFree,
-  insertBack
+  insertBack,
+  nth,
+  length
 );
 
 module body Assoc is
-  function main(): ExitCode is
-    let a: Assoc := makeEmpty();
-    insert(&!a, 1, 2);
-    destroy(a);
-    return ExitSuccess();
-  end;
-
   record Assoc: Linear is
     keys: Buffer[Int32];
     values: Buffer[Int32];
@@ -26,12 +21,37 @@ module body Assoc is
 
   generic [R: Region]
   function insert(assoc: &![Assoc, R], key: Int32, value: Int32): Unit is
-    insertBack(&!(assoc->keys), key);
-    insertBack(&!(assoc->values), value);
+    insertBack(&(assoc->keys), key);
+    -- error :'(
+    -- insertBack(&(assoc->values), value);
     return nil;
   end;
 
-  function destroy(assoc: Assoc): Unit is
+  function with(assoc: Assoc, key: Int32, value: Int32): Assoc is
+    var {
+      keys: Buffer[Int32],
+      values: Buffer[Int32]
+    } := assoc;
+    insertBack(&!keys, key);
+    insertBack(&!values, value);
+    return Assoc(keys => keys, values => values);
+  end;
+
+  generic [R: Region]
+  function display(assoc: &[Assoc, R]): Unit is
+    printLn("keys:");
+    for i from 0 to length(&(assoc->keys)) - 1 do
+      printLn(nth(&(assoc->keys), i));
+    end for;
+
+    printLn("values:");
+    for i from 0 to length(&(assoc->values)) - 1 do
+      printLn(nth(&(assoc->values), i));
+    end for;
+    return nil;
+  end;
+
+  function unmake(assoc: Assoc): Unit is
     let {
       keys: Buffer[Int32],
       values: Buffer[Int32]
