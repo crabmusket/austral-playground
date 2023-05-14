@@ -19,7 +19,6 @@ module body EchoServer is
     let listening: ListeningSocket := mustListen(bound);
     acceptLoop(&listening);
     closeListeningSocket(listening);
-    printLn("closed");
 
     surrenderRoot(root);
     return ExitSuccess();

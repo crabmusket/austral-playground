@@ -1,6 +1,11 @@
 module Socket is
+  -- A socket bound to a local interface.
   type BoundSocket: Linear;
+
+  -- A socket which is listening for incoming connections.
   type ListeningSocket: Linear;
+
+  -- A socket which is connected to a remote peer.
   type ConnectedSocket: Linear;
 
   union SocketType: Free is
@@ -20,6 +25,7 @@ module Socket is
   end;
 
   record BindOptions: Free is
+    -- TODO: remove this, create separate constructors and types for stream and datagram sockets.
     socket_type: SocketType;
     address: BindAddress;
     port: FixedArray[Nat8];

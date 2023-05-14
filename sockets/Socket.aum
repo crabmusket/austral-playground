@@ -1,5 +1,3 @@
-import Austral.Memory (Address);
-
 module body Socket is
   pragma Unsafe_Module;
 
@@ -24,7 +22,7 @@ module body Socket is
     let host: FixedArray[Nat8] := getHost(opts->address);
     let fam: Int32 := getFamily(opts->address);
     let typ: Int32 := getType(opts->socket_type);
-    let fd: Int32 := C_austral_sockets_bind(fam, typ, host, opts->port);
+    let fd: Int32 := C_austral_sockets_easybind(fam, typ, host, opts->port);
     if fd < 0 then
       return None();
     else
@@ -70,8 +68,8 @@ module body Socket is
     return nil;
   end;
 
-  function C_austral_sockets_bind(family: Int32, socktype: Int32, addr: FixedArray[Nat8], port: FixedArray[Nat8]): Int32 is
-    pragma Foreign_Import(External_Name => "austral_sockets_bind");
+  function C_austral_sockets_easybind(family: Int32, socktype: Int32, addr: FixedArray[Nat8], port: FixedArray[Nat8]): Int32 is
+    pragma Foreign_Import(External_Name => "austral_sockets_easybind");
   end;
 
   function C_austral_sockets_listen(fd: Int32, backlog: Int32): Int32 is

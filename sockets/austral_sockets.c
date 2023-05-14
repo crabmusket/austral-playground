@@ -5,46 +5,27 @@
 #include <stdio.h>
 #include <unistd.h>
 
-/*
-int aus_socket_bind_inet(int socket_fd, int port) {
-  struct sockaddr_in address;
-  address.sin_family = AF_INET;
-  address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons(port);
-  return bind(socket_fd, (struct sockaddr*)&address, sizeof(address));
-}
+// Most of this file was copied and adapted from Beej's guide to network programming:
+// https://beej.us/guide/bgnet/html/
 
-int aus_socket_bind_addrinfo(int socket_fd, struct addrinfo* res) {
-  // TODO: walk res
-  return bind(socket_fd, res->ai_addr, res->ai_addrlen);
-}
+// TODO: use errno to provide more helpful error messages back to Austral code.
 
-struct addrinfo* aus_socket_getaddrinfo() {
-  struct addrinfo hints, *res;
-  int sockfd;
-
-  // first, load up address structs with getaddrinfo():
-
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
-
-  getaddrinfo(NULL, "3490", &hints, &res);
-
-  return res;
-}
-
-int aus_socket_freeaddrinfo(struct addrinfo *res) {
-  freeaddrinfo(res);
-  return 0;
-}
-*/
-
-int austral_sockets_bind(int family, int socktype, const char* addr, const char *port)
+/**
+ * Create a socket bound to a given address and port. If addr or port are empty strings,
+ * they'll be treated as "NULL" when used with getaddrinfo.
+ *
+ * By doing the create and bind in a single function, we encapsulate the linked list result
+ * from getaddrinfo. This reduces flexibility, unfortunately, because the caller does not
+ * have access to setsocketopt() between the calls to socket() and bind(). Someday
+ * I might improve this.
+ *
+ * Maybe an API based on using and returning opaque (struct addrinfo*) pointers would allow
+ * Austral equivalents of socket(), setsocketopt(), bind() etc.
+ */
+int austral_sockets_easybind(int family, int socktype, const char* addr, const char *port)
 {
   int sockfd;
-  struct addrinfo hints, *servinfo, *p;
+  struct addrinfo hints, *servinfo, *curr;
   int yes=1;
   int rv;
   const char *node = NULL, *service = NULL;
@@ -54,6 +35,9 @@ int austral_sockets_bind(int family, int socktype, const char* addr, const char 
   hints.ai_socktype = socktype;
   hints.ai_flags = AI_PASSIVE; // use my IP if not provided
 
+  // Austral doesn't pass null pointers for strings; but we'll use empty strings
+  // as sentinels. If a string is empty, it gets implicitly treated as NULL.
+  // TODO: are empty strings meaningful values for these APIs?
   if (strlen(addr) > 0) {
     node = addr;
   }
@@ -65,9 +49,9 @@ int austral_sockets_bind(int family, int socktype, const char* addr, const char 
     return -1;
   }
 
-  // loop through all the results and bind to the first we can
-  for(p = servinfo; p != NULL; p = p->ai_next) {
-    if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+  // Loop through all the results and bind to the first we can
+  for(curr = servinfo; curr != NULL; curr = curr->ai_next) {
+    if ((sockfd = socket(curr->ai_family, curr->ai_socktype, curr->ai_protocol)) == -1) {
       continue;
     }
 
@@ -76,7 +60,7 @@ int austral_sockets_bind(int family, int socktype, const char* addr, const char 
       continue;
     }
 
-    if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+    if (bind(sockfd, curr->ai_addr, curr->ai_addrlen) == -1) {
       close(sockfd);
       continue;
     }
@@ -84,9 +68,10 @@ int austral_sockets_bind(int family, int socktype, const char* addr, const char 
     break;
   }
 
-  freeaddrinfo(servinfo); // all done with this structure
+  // All done with this structure now.
+  freeaddrinfo(servinfo);
 
-  if (p == NULL)  {
+  if (curr == NULL)  {
     return -1;
   }
 
@@ -95,6 +80,7 @@ int austral_sockets_bind(int family, int socktype, const char* addr, const char 
 
 int austral_sockets_accept(int sockfd)
 {
+  // TODO: actually capture the client information.
   return accept(sockfd, NULL, NULL);
 }
 
@@ -108,21 +94,27 @@ int austral_sockets_close(int sockfd)
   return close(sockfd);
 }
 
+/**
+ * Keep trying to send a string until we get an error.
+ */
 int austral_sockets_send_all(int sockfd, const char *buf)
 {
   int len = strlen(buf);
-  int total = 0; // how many bytes we've sent
-  int bytesleft = len; // how many we have left to send
+  int sent = 0; // how many bytes we've sent
+  int remaining = len; // how many we have left to send
   int n;
 
-  while(total < len) {
-    n = send(sockfd, buf+total, bytesleft, 0);
+  while(sent < len) {
+    n = send(sockfd, buf+sent, remaining, 0);
     if (n == -1) {
       break;
     }
-    total += n;
-    bytesleft -= n;
+    sent += n;
+    remaining -= n;
   }
 
-  return n == -1 ? -1 : total; // return -1 on failure, bytes sent on success
+  // Return -1 on failure, bytes sent on success
+  return n == -1 ? -1 : sent;
+  // TODO: it would be nice to also return bytes sent on failure. Beej's code does that
+  // using an output parameter, but I'm not keen to try that with the FFI.
 }
