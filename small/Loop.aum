@@ -1,0 +1,26 @@
+module body Loop is
+  record Thing: Linear is end;
+
+  function main(): ExitCode is
+    var thing: Thing := Thing();
+    for i from 1 to 10 do
+      -- consume thing
+      let {} := thing;
+      -- do some logic
+      if false then
+        printLn("foo");
+        thing := Thing();
+      else
+        thing := Thing();
+      end if;
+    end for;
+
+    if true then
+      let {} := thing;
+      return ExitFailure();
+    else
+      let {} := thing;
+      return ExitSuccess();
+    end if;
+  end;
+end module body.

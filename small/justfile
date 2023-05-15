@@ -1,0 +1,7 @@
+build: bin loop
+
+bin:
+  mkdir -p bin
+
+loop:
+  austral compile --entrypoint=Loop:main --output=bin/loop ./Loop.aum
