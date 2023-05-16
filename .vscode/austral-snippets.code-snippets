@@ -1,69 +1,69 @@
 {
-	// Place your austral-playground workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
-	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
-	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
-	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
-	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
-	// Placeholders with the same ids are connected.
-	// Example:
-	// "Print to console": {
-	// 	"scope": "javascript,typescript",
-	// 	"prefix": "log",
-	// 	"body": [
-	// 		"console.log('$1');",
-	// 		"$2"
-	// 	],
-	// 	"description": "Log output to console"
-	// }
-	"Module interface": {
-		"scope": "austral",
-		"prefix": "module",
-		"body": [
-			"module $1 is",
+  // Place your austral-playground workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
+  // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
+  // is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
+  // used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+  // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
+  // Placeholders with the same ids are connected.
+  // Example:
+  // "Print to console": {
+  // 	"scope": "javascript,typescript",
+  // 	"prefix": "log",
+  // 	"body": [
+  // 		"console.log('$1');",
+  // 		"$2"
+  // 	],
+  // 	"description": "Log output to console"
+  // }
+  "Module interface": {
+    "scope": "austral",
+    "prefix": "module",
+    "body": [
+      "module $1 is",
       "\t$2",
-			"end module.",
-		],
-		"description": "Empty module interface declaration"
-	},
-	"Module body": {
-		"scope": "austral",
-		"prefix": "module body",
-		"body": [
-			"module body $1 is",
+      "end module.",
+    ],
+    "description": "Empty module interface declaration"
+  },
+  "Module body": {
+    "scope": "austral",
+    "prefix": "module body",
+    "body": [
+      "module body $1 is",
       "\t$2",
-			"end module body.",
-		],
-		"description": "Empty module body declaration"
-	},
-	"Generic function body": {
-		"scope": "austral",
-		"prefix": "generic",
-		"body": [
-			"generic [R: Region]",
+      "end module body.",
+    ],
+    "description": "Empty module body declaration"
+  },
+  "Generic function body": {
+    "scope": "austral",
+    "prefix": "generic",
+    "body": [
+      "generic [R: Region]",
       "function $1($2): $3 is",
       "\t$4",
-			"end;",
-		],
-		"description": "Empty generic function declaration."
-	},
-	"Function body": {
-		"scope": "austral",
-		"prefix": "function",
-		"body": [
+      "end;",
+    ],
+    "description": "Empty generic function declaration."
+  },
+  "Function body": {
+    "scope": "austral",
+    "prefix": "function",
+    "body": [
       "function $1($2): $3 is",
       "\t$4",
-			"end;",
-		],
-		"description": "Empty function declaration."
-	},
-	"C FFI function pattern": {
-		"scope": "austral",
-		"prefix": "function C_",
-		"body": [
+      "end;",
+    ],
+    "description": "Empty function declaration."
+  },
+  "C FFI function pattern": {
+    "scope": "austral",
+    "prefix": "function C_",
+    "body": [
       "function C_$1($2): $3 is",
       "\tpragma Foreign_Import(External_Name => \"$1\");",
-			"end;",
-		],
-		"description": "A C FFI function declaration"
-	}
+      "end;",
+    ],
+    "description": "A C FFI function declaration"
+  }
 }
