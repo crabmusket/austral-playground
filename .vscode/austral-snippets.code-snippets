@@ -65,5 +65,16 @@
       "end;",
     ],
     "description": "A C FFI function declaration"
+  },
+  "Case statement": {
+    "scope": "austral",
+    "prefix": "case",
+    "body": [
+      "case $1 of",
+      "\twhen $2 do",
+      "\t\t$3",
+      "end case;",
+    ],
+    "description": "Case statement"
   }
 }
