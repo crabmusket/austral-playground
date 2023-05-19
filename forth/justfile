@@ -1,0 +1,16 @@
+set dotenv-load
+
+SOURCES := "./Forth.aui,./Forth.aum ./Example.aum"
+
+STDLIB := env_var('AUSTRAL_STD')
+STANDARD_SOURCES := replace('__/Buffer.aui,__/Buffer.aum __/ByteString.aui,__/ByteString.aum', '__', STDLIB)
+
+run: build
+  ./bin/forth
+
+debug: build
+  gdb ./bin/forth
+
+build:
+  mkdir -p bin
+  austral compile --entrypoint=Example:main --output=bin/forth {{STANDARD_SOURCES}} {{SOURCES}}

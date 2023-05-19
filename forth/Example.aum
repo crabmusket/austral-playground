@@ -1,0 +1,15 @@
+import Forth (run);
+
+module body Example is
+  function main(): ExitCode is
+    let r1: Int32 := run("1 1 +");
+    print("Result 1: ");
+    printLn(r1);
+
+    let r2: Int32 := run("1 1 + 3 + 5 1 2 + + +");
+    print("Result 2: ");
+    printLn(r2);
+
+    return ExitSuccess();
+  end;
+end module body.

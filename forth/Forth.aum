@@ -1,0 +1,172 @@
+import Standard.Buffer (
+  Buffer,
+  allocateEmpty,
+  destroyEmpty,
+  length,
+  insertBack,
+  removeFirst,
+  removeLast,
+  map
+);
+
+import Standard.ByteString (
+  ByteString,
+  fromLiteral,
+  makeByteString,
+  destroyByteString,
+  nth as charAt,
+  length as strlen
+);
+
+module body Forth is
+  union StackValue: Linear is
+    case Num is
+      n: Int32;
+
+    case Str is
+      s: ByteString;
+  end;
+
+  union InputToken: Linear is
+    case T_Num is
+      n: Int32;
+
+    case T_Str is
+      s: ByteString;
+
+    case T_Add; -- 1 1 add
+    case T_Mul; -- 2 3 mul
+    case T_Cat; -- 'hello ' 'world' cat
+    case T_Times; -- 'hello' 3 times
+    case T_Print; -- 'hello world' print
+    case T_Dump; -- 1 2 3 dump
+  end;
+
+  function run(programText: FixedArray[Nat8]): Int32 is
+    var program: Buffer[InputToken] := parse(programText);
+    return interpret(program);
+  end;
+
+  -- https://www.ascii-code.com/
+  constant SPACE: Nat8 := 32;
+  constant PLUS: Nat8 := 43;
+  constant MINUS: Nat8 := 45;
+  constant ZERO: Nat8 := 48;
+  constant NINE: Nat8 := 57;
+
+  function parse(programText: FixedArray[Nat8]): Buffer[InputToken] is
+    var source: ByteString := fromLiteral(programText);
+    var program: Buffer[InputToken] := allocateEmpty();
+
+    var curr: Index := 0;
+    let last: Index := strlen(&source);
+
+    while curr < last do
+      let firstChar: Nat8 := charAt(&source, curr);
+
+      if firstChar = SPACE then
+        -- Nothing to do; let the pointer advance
+        skip;
+      else if (firstChar >= ZERO) and (firstChar <= NINE) then
+        -- Parse and emit an integer expression
+        -- For now, only a single character happens at a time
+        insertBack(&!program, T_Num(n => unwrap(toInt32(firstChar - ZERO), "unwrap char to Int32 failed")));
+      else if firstChar = PLUS then
+        insertBack(&!program, T_Add());
+      end if;
+
+      curr := curr + 1;
+    end while;
+
+    destroyByteString(source);
+    return program;
+  end;
+
+  function interpret(program: Buffer[InputToken]): Int32 is
+    var stack: Buffer[StackValue] := allocateEmpty();
+
+    -- Need to create a "copy" of program since I'm not allowed to mutate function parameters
+    var prog: Buffer[InputToken] := map(program, id: Fn[InputToken, InputToken]);
+
+    while length(&prog) > 0 do
+      let op: InputToken := removeFirst(&!prog);
+      case op of
+        when T_Num(n: Int32) do
+          insertBack(&!stack, Num(n => n));
+
+        when T_Str(s: ByteString) do
+          insertBack(&!stack, Str(s => s));
+
+        when T_Add do
+          doAdd(&!stack);
+
+        when T_Mul do
+          abort("not implemented: mul");
+
+        when T_Cat do
+          abort("not implemented: cat");
+
+        when T_Times do
+          abort("not implemented: times");
+
+        when T_Print do
+          abort("not implemented: print");
+
+        when T_Dump do
+          abort("not implemented: dump");
+      end case;
+    end while;
+
+    -- A well-formed program should have resulted in a single value being left on the stack as the program's return value.
+    -- We'll grab this last value off and if it's an int, return it to our caller.
+
+    var retVal: Int32 := -1;
+    let finalValue: StackValue := removeLast(&!stack);
+    case finalValue of
+      when Num(n: Int32) do
+        retVal := n;
+
+      when Str(s: ByteString) do
+        destroyByteString(s);
+    end case;
+
+    -- These will abort if we failed to consume all tokens.
+    destroyEmpty(stack);
+    destroyEmpty(prog);
+
+    return retVal;
+  end;
+
+  generic [R: Region]
+  function doAdd(stack: &![Buffer[StackValue], R]): Unit is
+    let n1: Int32 := expectNumber(removeLast(reborrow(stack)), "add operand 1");
+    let n2: Int32 := expectNumber(removeLast(reborrow(stack)), "add operand 2");
+    insertBack(reborrow(stack), Num(n => n1 + n2));
+    return nil;
+  end;
+
+  function expectNumber(atom: StackValue, err: FixedArray[Nat8]): Int32 is
+    case atom of
+      when Num(n: Int32) do
+        return n;
+      when Str(s: ByteString) do
+        destroyByteString(s);
+        abort(err);
+    end case;
+  end;
+
+  generic [T: Type]
+  function unwrap(o: Option[T], err: FixedArray[Nat8]): T is
+    case o of
+      when Some(value: T) do
+        return value;
+      when None do
+        abort(err);
+    end case;
+  end;
+
+  generic [T: Type]
+  function id(x: T): T is
+    return x;
+  end;
+end module body.
