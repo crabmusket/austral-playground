@@ -1,0 +1,19 @@
+module body Cases is
+    record Foo: Linear is end;
+
+    union Test: Free is case Pass; case Fail; end;
+
+    function check(): Unit is
+        var foo: Foo := Foo();
+        var test: Test := Pass();
+        case test of
+            when Pass() do
+                let {} := foo;
+                foo := Foo();
+            when Fail() do
+                skip;
+        end case;
+        let {} := foo;
+        return nil;
+    end;
+end module body.

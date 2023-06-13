@@ -1,0 +1,14 @@
+module body Fail is
+    record Foo: Linear is end;
+
+    function check(): Unit is
+        var foo: Foo := Foo();
+        if false then
+            let {} := foo;
+        else
+            skip;
+        end if;
+        let {} := foo;
+        return nil;
+    end;
+end module body.
